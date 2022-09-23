@@ -5,7 +5,7 @@ A simple RSS parser with minimal memory and performance requirements.
 
 ### Usage:
  
-```
+```php
 	require 'RssParser.php';
 	$rss = new RssParser();
 	$rss->setUrlFeed( array('https://example1.org/feed', 'https://example2.org/feed' ) );
