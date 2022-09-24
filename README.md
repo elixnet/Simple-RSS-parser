@@ -12,6 +12,7 @@ A simple RSS parser with minimal memory and performance requirements.
 	$rss->setItemsPerFeed( 10 );
 	$rss->setCachePath( 'cache/' );
 	$rss->setCacheTime( 7200 );
+	$rss->setRandomUa( false );
 	$feed = $rss->get();
 
 	foreach( $feed as $item ):

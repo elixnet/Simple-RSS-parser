@@ -13,6 +13,7 @@
  * 		$rss->setItemsPerFeed( 10 );
  * 		$rss->setCachePath( 'cache/' );
  * 		$rss->setCacheTime( 7200 );
+ * 		$rss->setRandomUa( false );
  * 		$feed = $rss->get();
  *
  * 		foreach( $feed as $item ):
@@ -51,6 +52,24 @@ class RssParser{
 	 */
 	protected $cachePath = NULL;
 
+	/** Random user agent for downloading
+	 */
+	protected $randomUa = TRUE;
+
+	/** Avalaible user agents
+	 */
+	protected $userAgents = array(
+								'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.102011-10-16 20:23:10',
+								'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+								'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+								'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+								'Mozilla/5.0 (Linux; Android 10; SM-A205U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.136 Mobile Safari/537.36',
+								'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:105.0) Gecko/20100101 Firefox/105.0',
+								'Mozilla/5.0 (X11; Linux i686; rv:105.0) Gecko/20100101 Firefox/105.0',
+								'Mozilla/5.0 (Macintosh; Intel Mac OS X 12.6; rv:105.0) Gecko/20100101 Firefox/105.0',
+								'Mozilla/5.0 (iPhone; CPU iPhone OS 12_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/105.0 Mobile/15E148 Safari/605.1.15',
+								'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.50'
+								);
 
 
 	/** Init class
@@ -163,6 +182,16 @@ class RssParser{
 		$this->itemsPerFeed = (int) $numItems;
 	}
 
+	/** Setting whether to use a random user agent for download.
+	 *
+	 * @param bool Yes or No
+	 * @return void
+	 */
+	public function setRandomUa( $bool )
+	{
+		$this->randomUa = $bool;
+	}
+
 	/** Setting the URL of one or more RSS feeds.
 	 *
 	 * @param array|string One URL or array
@@ -225,7 +254,7 @@ class RssParser{
 		{
 			return (int) filemtime( $filepath );
 		}else{
-			throw new Exception('Failed to find the cache file creation time!');
+			//throw new Exception('Failed to find the cache file creation time!');
 			return false;
 		}
 	}
@@ -246,7 +275,7 @@ class RssParser{
 			}
 			return true;
 		}else{
-			throw new Exception('Failed to find the cache file age!');
+			//throw new Exception('Failed to find the cache file age!');
 			return false;
 		}
 	}
@@ -277,7 +306,7 @@ class RssParser{
 			@unlink( $filepath );
 			return true;
 		}else{
-			throw new Exception('Failed to delete cache file!');
+			//throw new Exception('Failed to delete cache file!');
 			return false;
 		}
 	}
@@ -297,20 +326,20 @@ class RssParser{
 				$createFile = @file_put_contents( $filepath, $data, LOCK_EX );
 				if( $createFile === FALSE )
 				{
-					throw new Exception('Failed to create cache file!');
+					//throw new Exception('Failed to create cache file!');
 					return false;
 				}else{
 					return true;
 				}
 			}else{
-				throw new Exception('Failed to create cache file, a file with the same name already exists and cannot be deleted!');
+				//throw new Exception('Failed to create cache file, a file with the same name already exists and cannot be deleted!');
 				return false;
 			}
 		}else{
 			$createFile = @file_put_contents( $filepath, $data, LOCK_EX );
 			if( $createFile === FALSE )
 			{
-				throw new Exception('Failed to create cache file!');
+				//throw new Exception('Failed to create cache file!');
 				return false;
 			}else{
 				return true;
@@ -325,12 +354,25 @@ class RssParser{
 	 */
 	private function _getXmlFile( $filepath )
 	{
-		$fileContent = @file_get_contents( $filepath );
+		if( $this->randomUa ){
+			$ua = rand( 0, count( $this->userAgents ) - 1 );
+			$userAgent = $this->userAgents[ $ua ];
+		}else{
+			$userAgent = $_SERVER['HTTP_USER_AGENT'];
+		}
+		$options = array(
+						'http' => array(
+									'method'=>"GET",
+									'header'=> "User-Agent: " . $userAgent . "\r\n"
+									)
+						);
+		$context = stream_context_create( $options );
+		$fileContent = @file_get_contents( $filepath, false, $context );
 		if( $fileContent !== FALSE || ! empty( $fileContent ) )
 		{
 			$this->xmlFile = trim( $fileContent );
 		}else{
-			throw new Exception('Failed to load content of XML file!');
+			//throw new Exception('Failed to load content of XML file!');
 			return false;
 		}
 	}
@@ -345,7 +387,7 @@ class RssParser{
 		$this->xmlData = @simplexml_load_string( $xmlContent );
 		if( !$this->xmlData || empty( $this->xmlData ) || $this->xmlData === false )
 		{
-			throw new Exception('XML content is empty or corrupted!');
+			//throw new Exception('XML content is empty or corrupted!');
 			return false;
 		}
 
