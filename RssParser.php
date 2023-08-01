@@ -21,7 +21,6 @@
  * 			echo $item['link'];
  * 			echo $item['description'];
  * 			echo $item['pubDate'];
- * 			echo $item['thumb_url'];
  * 		endforeach;
  *
  * ---------------------------------------------------------------------
@@ -117,23 +116,12 @@ class RssParser{
 					continue;
 				}
 
-				// Fix for thumbnail from Seznam.cz
-				$sznImage = $this->xmlData->channel->item[$y]->children('szn', true)->image;
-				if ($sznImage) {
-					$imageUrl = (string) $sznImage->children('szn', true)->url;
-				}else{
-					$imageUrl = false;
-				}
 
 				$itemsArray[ strtotime( $this->xmlData->channel->item[$y]->pubDate ) ] = array(
 					'title'       => $this->xmlData->channel->item[$y]->title,
 					'link'        => $this->xmlData->channel->item[$y]->link,
 					'description' => $this->xmlData->channel->item[$y]->description,
-					'content'     => $this->xmlData->channel->item[$y]->children('content', true)->encoded->attributes(),
-					'media'       => $this->xmlData->channel->item[$y]->children('media', true)->content->attributes(),
-					'enclosure'   => $this->xmlData->channel->item[$y]->enclosure['url'],
 					'pubDate'     => $this->xmlData->channel->item[$y]->pubDate,
-					'szn_img'     => $imageUrl,
 				);
 			}
 		}
@@ -145,22 +133,6 @@ class RssParser{
 		$rss = NULL;
 		foreach( $itemsArray as $item)
 		{
-			$imgUrl = NULL;
-			if( !empty( $item['media'] ) )
-			{
-				$imgUrl = $item['media'];
-			}elseif( !empty( $item['enclosure'] ) )
-			{
-				$imgUrl = $item['enclosure'];
-			}elseif( !empty( $item['szn_img'] ) )
-			{
-				$imgUrl = $item['szn_img'];
-			}elseif( !empty( $item['content'] ) ){
-				$imgUrl = $this->_getFirstImage( $item['content'] );
-			}else{
-				$imgUrl = $this->_findOgImageUrl($item['link']);
-			}
-
 			$d = date('j', strtotime( $item['pubDate'] ));
 			$m = date('n', strtotime( $item['pubDate'] ));
 			$y = date('Y', strtotime( $item['pubDate'] ));
@@ -171,8 +143,6 @@ class RssParser{
 				'title'       => $item['title'],
 				'link'        => $item['link'],
 				'description' => $item['description'],
-				'content'     => $item['content'],
-				'thumb_url'   => $imgUrl,
 				'pubDate'     => $item['pubDate'],
 				'd'           => $d,
 				'm'           => $m,
@@ -181,7 +151,6 @@ class RssParser{
 				'i'           => $i,
 				];
 			$x++;
-			unset( $imgUrl );
 			unset( $item );
 		}
 		unset( $itemsArray );
@@ -410,37 +379,4 @@ class RssParser{
 
 	}
 
-	/** Checking for first image in post
-	 *
-	 * @param string Content of RSS item
-	 * @return string Empty string or URL for first image
-	 */
-	private function _getFirstImage( $html )
-	{
-		if ( preg_match('/<img.+?src="(.+?)"/', $html, $matches ) )
-		{
-			return trim( $matches[1] );
-		}
-		else return '';
-	}
-
-	/** Function to find the url address of the image from the og:image meta tag
-	 *
-	 * @param string Post URL
-	 * @return string|false Image URL
-	 */
-	private function _findOgImageUrl( $url ): string
-	{
-	    $pageContent = @file_get_contents($url);
-	    if($pageContent === false || empty($pageContent)){
-			return false;
-		}
-
-	    $pattern = '/<meta\s+property="og:image"\s+content="([^"]+)"\s*\/?>/i';
-	    if (preg_match($pattern, $pageContent, $matches)) {
-	        return (string) $matches[1];
-	    }
-
-	    return false;
-	}
 }

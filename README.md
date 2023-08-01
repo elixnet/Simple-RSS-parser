@@ -3,7 +3,7 @@ A simple RSS parser with minimal memory and performance requirements.
 
 
 ## Usage:
- 
+
 ```php
 	require 'RssParser.php';
 	$rss = new RssParser();
@@ -19,7 +19,6 @@ A simple RSS parser with minimal memory and performance requirements.
 		echo $item['link'];
 		echo $item['description'];
 		echo $item['pubDate'];
-		echo $item['thumb_url'];
 	endforeach;
 ```
 
