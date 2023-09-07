@@ -1,4 +1,5 @@
 # Simple RSS parser
+
 A simple RSS parser with minimal memory and performance requirements.
 
 
@@ -7,7 +8,7 @@ A simple RSS parser with minimal memory and performance requirements.
 ```php
 	require 'RssParser.php';
 	$rss = new RssParser();
-	$rss->setUrlFeed( array('https://example1.org/feed', 'https://example2.org/feed' ) );
+	$rss->setUrlFeed( ['https://example1.org/feed', 'https://example2.org/feed'] );
 	$rss->setItemsPerFeed( 10 );
 	$rss->setCachePath( 'cache/' );
 	$rss->setCacheTime( 7200 );
@@ -15,10 +16,11 @@ A simple RSS parser with minimal memory and performance requirements.
 	$feed = $rss->get();
 
 	foreach( $feed as $item ):
-		echo $item['title'];
-		echo $item['link'];
-		echo $item['description'];
-		echo $item['pubDate'];
+		echo $item['title'];        // show post title
+		echo $item['link'];         // show post url
+		echo $item['description'];  // show post description or content
+		echo $item['pubDate'];      // show post date and time
+		echo $item['sourceUrl'];    // show source url whitout "https://"
 	endforeach;
 ```
 

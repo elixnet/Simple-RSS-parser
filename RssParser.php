@@ -3,15 +3,22 @@
  * Simple RSS parser
  *
  * A simple RSS parser with minimal memory and performance requirements.
+ *
+ * @package RssParser
+ * @version 1.5.0
+ * @copyright 2023 Elix
+ * @author Elix
+ * @link https://github.com/Elixcz/Simple-RSS-parser
+ * @license https://tldrlegal.com/license/mit-license MIT License
  * ---------------------------------------------------------------------
  *
  * Usage:
  *
  * 		require 'RssParser.php';
  * 		$rss = new RssParser();
- * 		$rss->setUrlFeed( array('https://example1.org/feed', 'https://example2.org/feed' ) );
+ * 		$rss->setUrlFeed( ['https://example1.org/feed', 'https://example2.org/feed'] );
  * 		$rss->setItemsPerFeed( 10 );
- * 		$rss->setCachePath( 'cache/' );
+ * 		$rss->setCachePath( './cache/' );
  * 		$rss->setCacheTime( 7200 );
  * 		$rss->setRandomUa( false );
  * 		$feed = $rss->get();
@@ -21,41 +28,50 @@
  * 			echo $item['link'];
  * 			echo $item['description'];
  * 			echo $item['pubDate'];
+ * 			echo $item['sourceUrl'];
  * 		endforeach;
  *
  * ---------------------------------------------------------------------
  */
 class RssParser{
 
-	/** Number of displayed items from one RSS feed.
+	/**
+	 * Number of displayed items from one RSS feed.
 	 */
 	protected $itemsPerFeed = 5;
 
-	/** Number of seconds between cache updates
+	/**
+	 * Number of seconds between cache updates
 	 */
 	protected $cacheTime = 7200;
 
-	/** Feed URLs
+	/**
+	 * Feed URLs
 	 */
 	protected $feedUrls = NULL;
 
-	/** The content of the XML file
+	/**
+	 * The content of the XML file
 	 */
 	protected $xmlFile = NULL;
 
-	/** The data from XML file
+	/**
+	 * The data from XML file
 	 */
 	protected $xmlData = NULL;
 
-	/** The path for storing cache files.
+	/**
+	 * The path for storing cache files.
 	 */
 	protected $cachePath = NULL;
 
-	/** Random user agent for downloading
+	/**
+	 * Random user agent for downloading RSS feed
 	 */
 	protected $randomUa = TRUE;
 
-	/** Avalaible user agents
+	/**
+	 * Avalaible user agents
 	 */
 	protected $userAgents = array(
 								'Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.102011-10-16 20:23:10',
@@ -71,13 +87,14 @@ class RssParser{
 								);
 
 
-	/** Init class
+	/**
+	 * Init class
 	 */
 	public function __construct()
 	{
 		if( ! function_exists( 'simplexml_load_string' ) )
 		{
-			throw new Exception('The PHP function "simplexml_load_string" is required for this class to function properly.');
+			throw new Exception('The PHP function "simplexml_load_string" is required for class RssParser to function properly.');
 			return false;
 		}
 	}
@@ -116,17 +133,16 @@ class RssParser{
 					continue;
 				}
 
-
 				$itemsArray[ strtotime( $this->xmlData->channel->item[$y]->pubDate ) ] = array(
 					'title'       => $this->xmlData->channel->item[$y]->title,
 					'link'        => $this->xmlData->channel->item[$y]->link,
 					'description' => $this->xmlData->channel->item[$y]->description,
 					'pubDate'     => $this->xmlData->channel->item[$y]->pubDate,
+					'sourceUrl'   => $this->_showFeedSource( $this->xmlData->channel->item[$y]->link ),
 				);
 			}
 		}
 		unset( $this->xmlData );
-
 		krsort( $itemsArray );
 
 		$x = 0;
@@ -144,6 +160,7 @@ class RssParser{
 				'link'        => $item['link'],
 				'description' => $item['description'],
 				'pubDate'     => $item['pubDate'],
+				'sourceUrl'   => $item['sourceUrl'],
 				'd'           => $d,
 				'm'           => $m,
 				'y'           => $y,
@@ -154,7 +171,6 @@ class RssParser{
 			unset( $item );
 		}
 		unset( $itemsArray );
-
 		return $rss;
 	}
 
@@ -379,4 +395,19 @@ class RssParser{
 
 	}
 
+	/** Return domain URL of source
+	 *
+	 * @param string Feed item URL
+	 * @return string Source URL
+	 */
+	private function _showFeedSource( $feed_item_url = false ){
+		if(!$feed_item_url) return 'undefined!';
+
+		$tmp = explode('/', $feed_item_url);
+		$source = $tmp[2];
+		$source = str_replace('www.', '', $source);
+		$source = ucfirst($source);
+		return (string) $source;
+	}
 }
+// END of file
